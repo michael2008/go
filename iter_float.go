@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -207,10 +208,20 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	c := iter.nextToken()
 	if c == '-' {
-		return -iter.readPositiveFloat64()
+		v := -iter.readPositiveFloat64()
+		if iter.Error != nil {
+			iter.Error = nil
+			return -math.MaxFloat64
+		}
+		return v
 	}
 	iter.unreadByte()
-	return iter.readPositiveFloat64()
+	v := iter.readPositiveFloat64()
+	if iter.Error != nil {
+		iter.Error = nil
+		return -math.MaxFloat64
+	}
+	return v
 }
 
 func (iter *Iterator) readPositiveFloat64() (ret float64) {

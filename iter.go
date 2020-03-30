@@ -178,13 +178,28 @@ func (iter *Iterator) isObjectEnd() bool {
 	return true
 }
 
+const (
+	maxASCII   = '\u007F' // unicode.MaxASCII
+	validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_/:[]{}\",\\"
+)
+
+var validCharTable [maxASCII + 1]bool
+
+// set valid chars in json, any char (except json control chars, e.g. ",[]{}:) not in the valid chars will be skipped
+func init() {
+	for _, r := range validChars {
+		if r < maxASCII {
+			validCharTable[r] = true
+		}
+	}
+}
+
+// patched: only keep a subset of chars defined by validChars
 func (iter *Iterator) nextToken() byte {
-	// a variation of skip whitespaces, returning the next non-whitespace token
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
-			switch c {
-			case ' ', '\n', '\t', '\r':
+			if c > maxASCII || !validCharTable[c] {
 				continue
 			}
 			iter.head = i + 1
