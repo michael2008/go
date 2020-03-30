@@ -7,7 +7,15 @@ import "fmt"
 func (iter *Iterator) ReadNil() (ret bool) {
 	c := iter.nextToken()
 	if c == 'n' {
-		iter.skipThreeBytes('u', 'l', 'l') // null
+		n := iter.nextToken()
+		if n == 'u' {
+			iter.unreadByte()
+			iter.skipThreeBytes('u', 'l', 'l') // null
+		} else if n == 'a' {
+			iter.unreadByte()
+			iter.unreadByte()
+			iter.skipThreeBytes('n', 'a', 'n') // nan
+		}
 		return true
 	}
 	iter.unreadByte()
